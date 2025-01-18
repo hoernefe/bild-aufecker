@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interaktives Bildaufdecken</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        #container {
+            position: relative;
+            display: none; /* Wird nach dem Upload sichtbar */
+            border: 2px solid #333;
+            max-width: 90vw; /* Begrenzung der Breite */
+            max-height: 90vh; /* Begrenzung der Höhe */
+            overflow: hidden; /* Verhindert Überlauf */
+        }
+
+        #image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Bild wird skaliert */
+        }
+
+        .cover {
+            position: absolute;
+            background-color: #333;
+            cursor: pointer;
+        }
+
+        .cover:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div id="upload-container">
+        <h1>Interaktives Bildaufdecken</h1>
+        <p>Lade ein Bild hoch, um es stückweise aufzudecken!</p>
+        <label for="grid-size">Quadratgröße (in Pixel): </label>
+        <input type="number" id="grid-size" value="50" min="10" max="200" step="10">
+        <br><br>
+        <input type="file" id="file-input" accept="image/*">
+    </div>
+
+    <div id="container">
+        <img id="image" alt="Verdecktes Bild">
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const container = document.getElementById('container');
+        const image = document.getElementById('image');
+        const gridSizeInput = document.getElementById('grid-size');
+        const uploadContainer = document.getElementById('upload-container');
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    image.src = e.target.result;
+                    image.onload = setupCover;
+                    container.style.display = 'block';
+                    uploadContainer.style.display = 'none'; // Versteckt den Upload-Bereich
+                };
+
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function setupCover() {
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            const squareSize = parseInt(gridSizeInput.value, 10) || 50; // Größe der Quadrate
+
+            // Entferne alte Quadrate
+            container.querySelectorAll('.cover').forEach(cover => cover.remove());
+
+            // Passe die Containergröße an
+            container.style.width = `${containerWidth}px`;
+            container.style.height = `${containerHeight}px`;
+
+            // Erstelle neue Quadrate
+            for (let y = 0; y < containerHeight; y += squareSize) {
+                for (let x = 0; x < containerWidth; x += squareSize) {
+                    const square = document.createElement('div');
+                    square.className = 'cover';
+                    square.style.width = `${squareSize}px`;
+                    square.style.height = `${squareSize}px`;
+                    square.style.top = `${y}px`;
+                    square.style.left = `${x}px`;
+                    square.style.position = 'absolute';
+
+                    square.addEventListener('click', () => {
+                        square.style.display = 'none';
+                    });
+
+                    container.appendChild(square);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
